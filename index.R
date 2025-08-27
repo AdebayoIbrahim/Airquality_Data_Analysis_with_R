@@ -5,6 +5,7 @@ install.packages("dplyr")
 install.packages("ggplot2")
 install.packages("lubridate")
 install.packages("corrplot")
+install.packages("forecast")
 # load library()
 library("readr")
 library("dplyr")
@@ -12,6 +13,7 @@ library("ggplot2")
 library("dplyr")
 library(tidyr)
 library(ggplot2)
+library(forecast)
 #setting working directory
 setwd("/home/setup/Desktop/Sta-334-Project")
 # load the air quality data set
@@ -132,11 +134,52 @@ ggplot(plot_data, aes(x = reorder(City, Days_Exceeded), y = Days_Exceeded, fill 
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
+# ------------(THREE) Time-Series Forecasting for Cairo -----------
+# Let's use Cairo, as its high number of exceedance days will 
+# likely show some interesting trends.
+#  we need to filter our data for Cairo and then combine  it to a weekly level. 
+# Making the time series easier to model, forecast library will be used
+
+# Filtering the data to get only Cairo's records
+cairo_data <- df_final %>%
+  filter(City == "Cairo")
+
+# combine the data to a weekly average for a cleaner time series 
+#i.e hours from jan [1-7] becomes week 
+cairo_ts_data <- cairo_data %>%
+  mutate(Week = floor_date(Date, "week")) %>%
+  group_by(Week) %>%
+  summarise(
+    AQI_Weekly = mean(AQI, na.rm = TRUE)
+  )
+
+# converting dataframe into a time series object using ts(startdate, frequency)
+cairo_ts <- ts(cairo_ts_data$AQI_Weekly, start = c(2024, 1), frequency = 52)
+
+# Plot the time series to visualize the trend
+plot(cairo_ts, main = "Cairo Weekly AQI (2024)", xlab = "Time", ylab = "AQI",col = "dodgerblue" ,lwd=2)
+
+# using auto.arima() function to select the best arima model for the forecast
+# Fitting an ARIMA model to the time series data
+fit <- auto.arima(cairo_ts)
+
+# Print the model summary to see the chosen parameters
+print(summary(fit))
+# We can Forecast the next 4 weeks of AQI(Air quality Index for Cairo City)
+forecast_results <- forecast(fit, h = 5)
 
 
-
-
-
+# Plot the forecast using autoplot, which uses ggplot2
+# We will use this to set up the plot
+autoplot(forecast_results, main = "Cairo AQI Forecast (Next 4 Weeks)",
+         xlab = "Time", ylab = "Weekly AQI") +
+  # Using autolayer to add the historical data
+  autolayer(cairo_ts, series = "Historical Data") +
+  # Using autolayer to add the forecast with its confidence intervals
+  autolayer(forecast_results, series = "Forecasted Data", PI = TRUE) +
+  scale_color_manual(values = c("Historical Data" = "dodgerblue", "Forecasted Data" = "firebrick")) +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank())
 
 
 
