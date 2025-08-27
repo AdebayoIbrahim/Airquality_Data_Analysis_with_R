@@ -65,4 +65,51 @@ df_numeric <- df_final %>%
 
 # (B):Compute the correlation matrix for the prepared data
 correlation_matrix <- cor(df_numeric)
+# (C): # Plotting the correlation heatmap
+corrplot(correlation_matrix, method = "color", type = "upper",
+         addCoef.col = "black", # Add correlation coefficients
+         tl.cex = 0.7, # Font size for labels
+         tl.col = "black")
+
+#============ (TWO) Health Impact Analysis ========
+#Our task is to find out how many days each city exceeded these healthy thresholds during 2024.
+#We will then visualize this to make a  statement in presentation.
+# (A): we calculate the Days Exceeding WHO Guidelines per City
+# with dplyr we can group the data by City and count the number of daily measurements 
+#that are above the WHO guidelines for both PM2.5 and PM10
+
+# Calculate the number of days each city exceeded the WHO PM2.5 guideline
+# ------------------ According to WHO 
+# PM2.5(fine dust ,most dangerous) : harmful when concentration is greater than [15μg/m³],
+# PM10(Coarse Dust): Harmful when concentration is greater than [45μg/m³] 
+#----------------------
+pm25_exceedance <- df_final %>%
+  group_by(City) %>%
+  summarise(
+    Days_Above_PM25_Guideline = sum(PM2.5 > 15, na.rm = TRUE)
+  )
+
+# Calculate the number of days each city exceeded the WHO PM10 guideline
+pm10_exceedance <- df_final %>%
+  group_by(City) %>%
+  summarise(
+    Days_Above_PM10_Guideline = sum(PM10 > 45, na.rm = TRUE)
+  )
+
+# Print the results
+print("Days each city exceeded the WHO PM2.5 guideline:")
+print(pm25_exceedance)
+
+print("Days each city exceeded the WHO PM10 guideline:")
+print(pm10_exceedance)
+
+
+
+
+
+
+
+
+
+
 
