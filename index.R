@@ -3,6 +3,8 @@
 install.packages("readr")
 install.packages("dplyr")
 install.packages("ggplot2")
+install.packages("lubridate")
+install.packages("corrplot")
 # load library()
 library("readr")
 library("dplyr")
@@ -51,10 +53,16 @@ print(names(df_final))
 print(nrow(df_final))
 
 # --------------  PHASE3 (DATA ANALYSIS) -------------
-# =========   ONE Pollutant Correlation Analysis ===========
+# =========   (ONE) Pollutant Correlation Analysis ===========
 # Our goal here is to identify which pollutants have the strongest relationship with the Air Quality Index (AQI).
 # We'll do this by creating a Correlation matrix and then visualizing it with a correlation heatmap
+# corrplot package is required and loaded
+library("corrplot")
+# (A): we  Select the numeric columns for the analysis
+# by  selecting  all columns except 'Date' and 'City'
+df_numeric <- df_final %>%
+  select(-Date, -City)
 
-
-
+# (B):Compute the correlation matrix for the prepared data
+correlation_matrix <- cor(df_numeric)
 
