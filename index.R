@@ -1,0 +1,60 @@
+# -----------PHASE ONE-----------
+#install required packages
+install.packages("readr")
+install.packages("dplyr")
+install.packages("ggplot2")
+# load library()
+library("readr")
+library("dplyr")
+library("ggplot2")
+library("dplyr")
+#setting working directory
+setwd("/home/setup/Desktop/Sta-334-Project")
+# load the air quality data set
+df_aqi <- read_csv("Air_Quality.csv")
+
+# Display the first few rows of the data frame
+head(df_aqi)
+#getting info about the data
+glimpse(df_aqi)
+
+# Statistical summary for numeric columns
+summary(df_aqi)
+#---------PHASE TWO --------------------
+# ---    A -cleaning the Datas 
+#    ---- 80% of Co2 data is missing we can exclude it from our main correlation analysis
+#---- The Date column is currently a character string. 
+#For any time-series analysis, R needs to recognize it as a date object. 
+#We can use the ymd_hms() function from the lubridate 
+#load the lubridate library
+library("lubridate")
+# Converting the Date column to a proper date-time object
+df_aqi <- df_aqi %>%
+  mutate(Date = ymd_hms(Date))
+
+#as we got errors in converting some dates to proper date object 
+#we cleaned the rows rows as part of data cleaning by filtering by if is not [NA]
+df_aqi_clean <- df_aqi %>%
+  filter(!is.na(Date))
+
+# Check the number of rows to confirm the cleaning worked
+print("The number of rows after cleaning:")
+print(nrow(df_aqi_clean))
+
+#also lets remove c02 as part of our data cleaning as it has almost 45,000 NA values
+#i.e 80% of the values are missing by excluding with - sign
+df_final <- df_aqi_clean %>%
+  select(-CO2)
+# Checking the column names to confirm it was removed
+print("The columns in the final data frame are:")
+print(names(df_final))
+print(nrow(df_final))
+
+# --------------  PHASE3 (DATA ANALYSIS) -------------
+# =========   ONE Pollutant Correlation Analysis ===========
+# Our goal here is to identify which pollutants have the strongest relationship with the Air Quality Index (AQI).
+# We'll do this by creating a Correlation matrix and then visualizing it with a correlation heatmap
+
+
+
+
