@@ -10,6 +10,8 @@ library("readr")
 library("dplyr")
 library("ggplot2")
 library("dplyr")
+library(tidyr)
+library(ggplot2)
 #setting working directory
 setwd("/home/setup/Desktop/Sta-334-Project")
 # load the air quality data set
@@ -104,6 +106,31 @@ print("Days each city exceeded the WHO PM10 guideline:")
 print(pm10_exceedance)
 
 
+# Plotting the values in a a Bar chart for easier visualization & disparity between the cities
+# Combine the two data frames for easier plotting
+combined_exceedance <- left_join(pm25_exceedance, pm10_exceedance, by = "City")
+
+# Reshaping  the data for a better bar chart layout
+plot_data <- combined_exceedance %>%
+  pivot_longer(
+    cols = c("Days_Above_PM25_Guideline", "Days_Above_PM10_Guideline"),
+    names_to = "Pollutant",
+    values_to = "Days_Exceeded"
+  )
+
+# Create the bar chart with reordered cities
+ggplot(plot_data, aes(x = reorder(City, Days_Exceeded), y = Days_Exceeded, fill = Pollutant)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_text(aes(label = Days_Exceeded), position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
+  labs(
+    title = "Number of Days Exceeding WHO Air Quality Guidelines (2024)",
+    subtitle = "Cities Ranked by Total Exceedance Days (PM2.5 >15 µg/m³ & PM10 >45 µg/m³)",
+    x = "City",
+    y = "Number of Days Exceeded",
+    fill = "Pollutant Type"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 
