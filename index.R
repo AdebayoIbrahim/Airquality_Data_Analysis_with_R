@@ -6,6 +6,7 @@ install.packages("ggplot2")
 install.packages("lubridate")
 install.packages("corrplot")
 install.packages("forecast")
+install.packages('tidyr')
 # load library()
 library("readr")
 library("dplyr")
@@ -15,7 +16,7 @@ library(tidyr)
 library(ggplot2)
 library(forecast)
 #setting working directory
-setwd("/home/setup/Desktop/Sta-334-Project")
+setwd("/home/setup/Desktop/Airquality_Data_Analysis_with_R")
 # load the air quality data set
 df_aqi <- read_csv("Air_Quality.csv")
 
@@ -27,18 +28,18 @@ glimpse(df_aqi)
 # Statistical summary for numeric columns
 summary(df_aqi)
 #---------PHASE TWO --------------------
-# ---    A -cleaning the Datas 
+# ---    A -cleaning the Datas
 #    ---- 80% of Co2 data is missing we can exclude it from our main correlation analysis
-#---- The Date column is currently a character string. 
-#For any time-series analysis, R needs to recognize it as a date object. 
-#We can use the ymd_hms() function from the lubridate 
+#---- The Date column is currently a character string.
+#For any time-series analysis, R needs to recognize it as a date object.
+#We can use the ymd_hms() function from the lubridate
 #load the lubridate library
 library("lubridate")
 # Converting the Date column to a proper date-time object
 df_aqi <- df_aqi %>%
   mutate(Date = ymd_hms(Date))
 
-#as we got errors in converting some dates to proper date object 
+#as we got errors in converting some dates to proper date object
 #we cleaned the rows rows as part of data cleaning by filtering by if is not [NA]
 df_aqi_clean <- df_aqi %>%
   filter(!is.na(Date))
@@ -79,13 +80,13 @@ corrplot(correlation_matrix, method = "color", type = "upper",
 #Our task is to find out how many days each city exceeded these healthy thresholds during 2024.
 #We will then visualize this to make a  statement in presentation.
 # (A): we calculate the Days Exceeding WHO Guidelines per City
-# with dplyr we can group the data by City and count the number of daily measurements 
+# with dplyr we can group the data by City and count the number of daily measurements
 #that are above the WHO guidelines for both PM2.5 and PM10
 
 # Calculate the number of days each city exceeded the WHO PM2.5 guideline
-# ------------------ According to WHO 
+# ------------------ According to WHO
 # PM2.5(fine dust ,most dangerous) : harmful when concentration is greater than [15μg/m³],
-# PM10(Coarse Dust): Harmful when concentration is greater than [45μg/m³] 
+# PM10(Coarse Dust): Harmful when concentration is greater than [45μg/m³]
 #----------------------
 pm25_exceedance <- df_final %>%
   group_by(City) %>%
@@ -135,17 +136,17 @@ ggplot(plot_data, aes(x = reorder(City, Days_Exceeded), y = Days_Exceeded, fill 
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # ------------(THREE) Time-Series Forecasting for Cairo -----------
-# Let's use Cairo, as its high number of exceedance days will 
+# Let's use Cairo, as its high number of exceedance days will
 # likely show some interesting trends.
-#  we need to filter our data for Cairo and then combine  it to a weekly level. 
+#  we need to filter our data for Cairo and then combine  it to a weekly level.
 # Making the time series easier to model, forecast library will be used
 
 # Filtering the data to get only Cairo's records
 cairo_data <- df_final %>%
   filter(City == "Cairo")
 
-# combine the data to a weekly average for a cleaner time series 
-#i.e hours from jan [1-7] becomes week 
+# combine the data to a weekly average for a cleaner time series
+#i.e hours from jan [1-7] becomes week
 cairo_ts_data <- cairo_data %>%
   mutate(Week = floor_date(Date, "week")) %>%
   group_by(Week) %>%
@@ -181,5 +182,40 @@ autoplot(forecast_results, main = "Cairo AQI Forecast (Next 4 Weeks)",
   theme_minimal() +
   theme(legend.position = "bottom", legend.title = element_blank())
 
+
+
+# ------------(THREE) Time-Series Forecasting for Newyork -----------
+# Filter the data to get only New York's records
+ny_data <- df_final %>%
+  filter(City == "New York")
+
+# Aggregate the data to a weekly average
+ny_ts_data <- ny_data %>%
+  mutate(Week = floor_date(Date, "week")) %>%
+  group_by(Week) %>%
+  summarise(
+    AQI_Weekly = mean(AQI, na.rm = TRUE)
+  )
+
+# 2. Create a Time-Series Object for New York
+ny_ts <- ts(ny_ts_data$AQI_Weekly, start = c(2024, 1), frequency = 52)
+plot(ny_ts, main = "New York Weekly AQI (2024)", xlab = "Time", ylab = "AQI")
+
+# 3. Build and Forecast the Model for New York
+fit_ny <- auto.arima(ny_ts)
+print(summary(fit_ny))
+forecast_results_ny <- forecast(fit_ny, h = 4)
+# Plot the New York forecast using autoplot
+autoplot(forecast_results_ny, main = "New York AQI Forecast (Next 4 Weeks)",
+         xlab = "Time", ylab = "Weekly AQI") +
+  # Adding the historical data
+  autolayer(ny_ts, series = "Historical Data") +
+  # Add the forecast with confidence intervals
+  autolayer(forecast_results_ny, series = "Forecasted Data", PI = TRUE) +
+  # Customize the color palette and labels
+  scale_color_manual(values = c("Historical Data" = "purple", "Forecasted Data" = "orange")) +
+  # Add a clean theme for a professional look
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank())
 
 
