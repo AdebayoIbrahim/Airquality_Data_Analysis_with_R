@@ -184,7 +184,8 @@ autoplot(forecast_results, main = "Cairo AQI Forecast (Next 4 Weeks)",
 
 
 
-# ------------(THREE) Time-Series Forecasting for Newyork -----------
+# ------------(Four) Time-Series Forecasting for Newyork -----------
+#it has high risk:
 # Filter the data to get only New York's records
 ny_data <- df_final %>%
   filter(City == "New York")
@@ -199,7 +200,7 @@ ny_ts_data <- ny_data %>%
 
 # 2. Create a Time-Series Object for New York
 ny_ts <- ts(ny_ts_data$AQI_Weekly, start = c(2024, 1), frequency = 52)
-plot(ny_ts, main = "New York Weekly AQI (2024)", xlab = "Time", ylab = "AQI")
+plot(ny_ts, main = "New York Weekly AQI (2024)", xlab = "Time", ylab = "AQI", col = "brown" ,lwd=2)
 
 # 3. Build and Forecast the Model for New York
 fit_ny <- auto.arima(ny_ts)
@@ -219,3 +220,91 @@ autoplot(forecast_results_ny, main = "New York AQI Forecast (Next 4 Weeks)",
   theme(legend.position = "bottom", legend.title = element_blank())
 
 
+
+# ------------(Five) Time-Series Forecasting for London -----------
+#low risk city
+# 1. Prepare the Data for London
+# Filter the data to get only London's records
+london_data <- df_final %>%
+  filter(City == "London")
+
+# Aggregate the data to a weekly average
+london_ts_data <- london_data %>%
+  mutate(Week = floor_date(Date, "week")) %>%
+  group_by(Week) %>%
+  summarise(
+    AQI_Weekly = mean(AQI, na.rm = TRUE)
+  )
+
+# 2. Create a Time-Series Object for London
+london_ts <- ts(london_ts_data$AQI_Weekly, start = c(2024, 1), frequency = 52)
+plot(london_ts, main = "London Weekly AQI (2024)", xlab = "Time", ylab = "AQI", col="magenta", lwd=2)
+
+# 3. Build and Forecast the Model for London
+fit_london <- auto.arima(london_ts)
+print(summary(fit_london))
+forecast_results_london <- forecast(fit_london, h = 4)
+# Plot the London forecast using autoplot
+autoplot(forecast_results_london, main = "London AQI Forecast (Next 4 Weeks)",
+         xlab = "Time", ylab = "Weekly AQI") +
+  # Add the historical data
+  autolayer(london_ts, series = "Historical Data") +
+  # Add the forecast with confidence intervals
+  autolayer(forecast_results_london, series = "Forecasted Data", PI = TRUE) +
+  # Customize the color palette and labels
+  scale_color_manual(values = c("Historical Data" = "green", "Forecasted Data" = "blue")) +
+  # Add a clean theme for a professional look
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+
+
+# scatter plot showing exceedence
+# Make sure you have the tidyverse library loaded
+library(tidyverse)
+
+# Filter the data for Cairo and add a column to flag exceedances
+cairo_exceedance_plot_data <- df_final %>%
+  filter(City == "Cairo") %>%
+  mutate(
+    Exceeds_PM25 = PM2.5 > 15,
+    Exceeds_PM10 = PM10 > 45,
+    Exceedance_Type = case_when(
+      Exceeds_PM25 & Exceeds_PM10 ~ "Both PM2.5 & PM10",
+      Exceeds_PM25 ~ "PM2.5 Only",
+      Exceeds_PM10 ~ "PM10 Only",
+      TRUE ~ "No Exceedance"
+    )
+  ) %>%
+  # Filter out rows with no exceedance to keep the plot clean and focused
+  filter(Exceedance_Type != "No Exceedance")
+
+# Create the scatter plot
+ggplot(cairo_exceedance_plot_data, aes(x = Date, y = AQI, color = Exceedance_Type)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "Cairo AQI vs. Days Exceeding WHO Guidelines",
+    subtitle = "Highlighting days when PM2.5 (>15 µg/m³) or PM10 (>45 µg/m³) were above limits",
+    x = "Date",
+    y = "AQI",
+    color = "Exceedance Type"
+  ) +
+  theme_minimal()
+
+
+# Make sure you have the tidyverse library loaded
+library(tidyverse)
+
+# Filter the data for Cairo and add a column to flag exceedances
+raw_aqi_plot <- ggplot(df_aqi_clean, aes(x = Date, y = AQI, group = City, color = City)) +
+  geom_line(alpha = 0.6) +
+  labs(
+    title = "AQI Over Time (All Cities)",
+    subtitle = "Raw data before aggregation or modeling",
+    x = "Date",
+    y = "AQI",
+    color = "City"
+  ) +
+  theme_minimal()
+
+print(raw_aqi_plot)
