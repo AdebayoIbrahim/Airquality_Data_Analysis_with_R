@@ -78,3 +78,9 @@ cd your-repo-name
 ```
 source("requirements.R")
 ```
+
+## 🙌 Credits & Licensing
+
+- Developed by **Ibrahim**  
+- Data sourced from a **global air quality dataset for 2024**  
+- Licensed under the **MIT License**  
