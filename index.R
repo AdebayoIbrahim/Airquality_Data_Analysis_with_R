@@ -258,6 +258,91 @@ autoplot(forecast_results_london, main = "London AQI Forecast (Next 4 Weeks)",
   theme(legend.position = "bottom", legend.title = element_blank())
 
 
+# 1. Prepare the Data for Dubai
+dubai_data <- df_aqi_clean %>%
+  filter(City == "Dubai") %>%
+  mutate(Week = floor_date(Date, "week")) %>%
+  group_by(Week) %>%
+  summarise(AQI_Weekly = mean(AQI, na.rm = TRUE))
+
+# 2. Create a Time-Series Object for Dubai
+dubai_ts <- ts(dubai_data$AQI_Weekly, start = c(2024, 1), frequency = 52)
+plot(dubai_ts, main = "Dubai Weekly AQI (2024)", xlab = "Time", ylab = "AQI", col="magenta", lwd=2)
+
+# 3. Build and Forecast the Model for Dubai
+fit_dubai <- auto.arima(dubai_ts)
+print(summary(fit_dubai))
+forecast_results_dubai <- forecast(fit_dubai, h = 4)
+
+# Plot the Dubai forecast using autoplot
+autoplot(forecast_results_dubai, main = "Dubai AQI Forecast (Next 4 Weeks)",
+         xlab = "Time", ylab = "Weekly AQI") +
+  autolayer(dubai_ts, series = "Historical Data") +
+  autolayer(forecast_results_dubai, series = "Forecasted Data", PI = TRUE) +
+  scale_color_manual(values = c("Historical Data" = "orange", "Forecasted Data" = "red")) +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+
+
+# --brasilia
+
+# 1. Prepare the Data for Brasilia
+brasilia_data <- df_aqi_clean %>%
+  filter(City == "Brasilia") %>%
+  mutate(Week = floor_date(Date, "week")) %>%
+  group_by(Week) %>%
+  summarise(AQI_Weekly = mean(AQI, na.rm = TRUE))
+
+# 2. Create a Time-Series Object for Brasilia
+brasilia_ts <- ts(brasilia_data$AQI_Weekly, start = c(2024, 1), frequency = 52)
+plot(brasilia_ts, main = "Brasilia Weekly AQI (2024)", xlab = "Time", ylab = "AQI", col="magenta", lwd=2)
+
+# 3. Build and Forecast the Model for Brasilia
+fit_brasilia <- auto.arima(brasilia_ts)
+print(summary(fit_brasilia))
+forecast_results_brasilia <- forecast(fit_brasilia, h = 4)
+
+# Plot the Brasilia forecast using autoplot
+autoplot(forecast_results_brasilia, main = "Brasilia AQI Forecast (Next 4 Weeks)",
+         xlab = "Time", ylab = "Weekly AQI") +
+  autolayer(brasilia_ts, series = "Historical Data") +
+  autolayer(forecast_results_brasilia, series = "Forecasted Data", PI = TRUE) +
+  scale_color_manual(values = c("Historical Data" = "dodgerblue", "Forecasted Data" = "skyblue")) +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+
+
+# sydney
+# 1. Prepare the Data for Sydney
+sydney_data <- df_aqi_clean %>%
+  filter(City == "Sydney") %>%
+  mutate(Week = floor_date(Date, "week")) %>%
+  group_by(Week) %>%
+  summarise(AQI_Weekly = mean(AQI, na.rm = TRUE))
+
+# 2. Create a Time-Series Object for Sydney
+sydney_ts <- ts(sydney_data$AQI_Weekly, start = c(2024, 1), frequency = 52)
+plot(sydney_ts, main = "Sydney Weekly AQI (2024)", xlab = "Time", ylab = "AQI", col="magenta", lwd=2)
+
+# 3. Build and Forecast the Model for Sydney
+fit_sydney <- auto.arima(sydney_ts)
+print(summary(fit_sydney))
+forecast_results_sydney <- forecast(fit_sydney, h = 4)
+
+# Plot the Sydney forecast using autoplot
+autoplot(forecast_results_sydney, main = "Sydney AQI Forecast (Next 4 Weeks)",
+         xlab = "Time", ylab = "Weekly AQI") +
+  autolayer(sydney_ts, series = "Historical Data") +
+  autolayer(forecast_results_sydney, series = "Forecasted Data", PI = TRUE) +
+  scale_color_manual(values = c("Historical Data" = "forestgreen", "Forecasted Data" = "darkgreen")) +
+  theme_minimal() +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+
+
+
 
 # scatter plot showing exceedence
 # Make sure you have the tidyverse library loaded
