@@ -184,8 +184,7 @@ autoplot(forecast_results, main = "Cairo AQI Forecast (Next 4 Weeks)",
 
 
 
-# ------------(Four) Time-Series Forecasting for Newyork -----------
-#it has high risk:
+# ------------(THREE) Time-Series Forecasting for Newyork -----------
 # Filter the data to get only New York's records
 ny_data <- df_final %>%
   filter(City == "New York")
@@ -200,7 +199,7 @@ ny_ts_data <- ny_data %>%
 
 # 2. Create a Time-Series Object for New York
 ny_ts <- ts(ny_ts_data$AQI_Weekly, start = c(2024, 1), frequency = 52)
-plot(ny_ts, main = "New York Weekly AQI (2024)", xlab = "Time", ylab = "AQI", col = "brown" ,lwd=2)
+plot(ny_ts, main = "New York Weekly AQI (2024)", xlab = "Time", ylab = "AQI")
 
 # 3. Build and Forecast the Model for New York
 fit_ny <- auto.arima(ny_ts)
